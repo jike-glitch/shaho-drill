@@ -105,6 +105,15 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .xs .row2 button.pri{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .xs p.note{font-size:12px;color:var(--ink3);margin:6px 0 0;line-height:1.6}
 .xs .msg{font-size:13px;color:var(--ok);margin-top:8px;min-height:1.2em;font-weight:700}
+.timer{display:none;align-items:center;gap:10px;margin:-2px 0 12px}
+.timer.on{display:flex}
+.timer .tb{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.timer .tb i{display:block;height:100%;background:var(--accent);width:100%;transition:width .2s linear,background .3s}
+.timer.warn .tb i{background:var(--ng)}
+.timer .tn{font-family:var(--disp);font-weight:800;font-size:18px;min-width:44px;text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.timer.warn .tn{color:var(--ng)}
+.verdict.to{background:var(--warn-soft);color:var(--warn)}
+.log .row{row-gap:12px}
 .chap{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);margin:0 16px 12px;overflow:hidden}
 .chap>button.chh{width:100%;display:flex;align-items:center;gap:10px;padding:14px 16px;text-align:left}
 .chh .n{font-family:var(--disp);font-weight:800;font-size:17px;flex:1;line-height:1.3}
@@ -229,6 +238,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
   <div class="qbar"><i id="qbar"></i></div>
   <div class="qwrap">
     <div class="qcard">
+      <div class="timer" id="timer"><span class="tb"><i id="tbar"></i></span><span class="tn" id="tnum"></span></div>
       <div class="qno" id="qno"></div>
       <p class="crumb" id="crumb"></p>
       <div><span class="topic" id="topic"></span><span class="star" id="starmark" hidden>優先度 低</span></div>
@@ -276,6 +286,8 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     <div class="seg" id="sh-order"><button data-v="seq" class="on">テキスト順</button><button data-v="rand">ランダム</button></div></div>
   <div class="opt"><label>問題数</label>
     <div class="seg" id="sh-limit"><button data-v="0" class="on">全部</button><button data-v="10">10問</button><button data-v="20">20問</button><button data-v="50">50問</button></div></div>
+  <div class="opt"><label>1問の制限時間（全モード共通の設定）</label>
+    <div class="seg" id="sh-time"><button data-v="0" class="on">なし</button><button data-v="15">15秒</button><button data-v="30">30秒</button><button data-v="45">45秒</button><button data-v="60">60秒</button><button data-v="90">90秒</button></div></div>
   <div class="tog"><span>☆・参考の項目も出す<small>優先度の低い項目（テキストの☆項目・参考）</small></span><button class="sw" id="sh-star" role="switch" aria-checked="false" aria-label="☆・参考の項目も出す"></button></div>
   <button class="start" id="sh-start">はじめる</button>
 </div>
@@ -311,6 +323,18 @@ const dkey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMont
 const IV=[1,3,7,30,90,180];
 function schedule(r,correct){if(correct){r.s=(r.w===0&&!r.s)?3:Math.min((r.s||0)+1,5);r.due=Date.now()+IV[r.s]*DAY;}else{r.s=0;r.due=Date.now()+1*DAY;}}
 const isDue=q=>{const r=rec(q);if(!r||r.last===undefined)return false;if(r.due===undefined)return r.last===0;return r.due<=Date.now();};
+// 設定（制限時間など）
+const SKEY='sr3-drill-set-v1';let SET={time:0};
+try{SET=Object.assign(SET,JSON.parse(localStorage.getItem(SKEY)||'{}'));}catch(e){}
+const saveSet=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SET));}catch(e){}};
+// 学習時間の計測: 問題画面が表に出ていて、3分以内に操作があった秒だけ数える
+let lastAct=Date.now();['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now();},{passive:true}));
+let secAcc=0;
+setInterval(()=>{if(!$('s-quiz').classList.contains('on'))return;if(document.visibilityState!=='visible')return;if(Date.now()-lastAct>180000)return;
+  const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.sec=(lg.sec||0)+1;if(run)run.sec=(run.sec||0)+1;if(++secAcc>=15){secAcc=0;save();}},1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')save();});
+const fmtTime=s=>{s=Math.round(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}<small>時間</small>${String(m).padStart(2,'0')}<small>分</small>`:`${m}<small>分</small>`;};
+const fmtTimePlain=s=>{s=Math.round(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${String(m).padStart(2,'0')}分`:`${m}分${String(s%60).padStart(2,'0')}秒`;};
 const stat=qs=>{let ans=0,ok=0,ng=0,wrongEver=0,bm=0;for(const q of qs){const r=rec(q);if(!r)continue;if(r.bm)bm++;if(r.last===undefined)continue;ans++;if(r.last)ok++;else ng++;if(r.w>0)wrongEver++;}return{n:qs.length,ans,ok,ng,wrongEver,bm};};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -358,29 +382,36 @@ function renderHome(){
 function renderLog(){
   const today=dkey(Date.now());const t=L[today]||{n:0,ok:0};
   // 連続日数
-  let streak=0;for(let i=0;;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&L[k].n>0)streak++;else if(i===0)continue;else break;}
-  const days=Object.keys(L).filter(k=>L[k].n>0).length;const totalN=Object.values(L).reduce((a,b)=>a+b.n,0);
+  let streak=0;for(let i=0;;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&(L[k].n>0||(L[k].sec||0)>=60))streak++;else if(i===0)continue;else break;}
+  const days=Object.keys(L).filter(k=>L[k].n>0||(L[k].sec||0)>=60).length;const totalN=Object.values(L).reduce((a,b)=>a+b.n,0);
+  const totalSec=Object.values(L).reduce((a,b)=>a+(b.sec||0),0);
+  const wk=[];for(let i=0;i<7;i++){const k=dkey(Date.now()-i*DAY);wk.push((L[k]||{}).sec||0);}const weekSec=wk.reduce((a,b)=>a+b,0);
   // 直近12週（84日）のヒートマップ。列=週、行=曜日
   const cells=[];const end=new Date();end.setHours(0,0,0,0);const endDow=end.getDay();const start=new Date(end.getTime()-(83+endDow)*DAY);
-  const grid=[];for(let w=0;w<12;w++){for(let d=0;d<7;d++){const t2=start.getTime()+(w*7+d)*DAY;if(t2>end.getTime()){grid.push('');continue;}const k=dkey(t2);const n=(L[k]||{}).n||0;const lv=n===0?'':n<10?'l1':n<30?'l2':n<60?'l3':'l4';grid.push(`<i class="${lv}${k===today?' today':''}" title="${k}: ${n}問"></i>`);}}
+  const grid=[];for(let w=0;w<12;w++){for(let d=0;d<7;d++){const t2=start.getTime()+(w*7+d)*DAY;if(t2>end.getTime()){grid.push('');continue;}const k=dkey(t2);const n=(L[k]||{}).n||0;const sc=(L[k]||{}).sec||0;const lv=(n===0&&sc<60)?'':n<10?'l1':n<30?'l2':n<60?'l3':'l4';grid.push(`<i class="${lv}${k===today?' today':''}" title="${k}: ${n}問 ${fmtTimePlain(sc)}"></i>`);}}
   // 行=曜日にするため転置して並べる
   const rows=[];for(let d=0;d<7;d++)for(let w=0;w<12;w++)rows.push(grid[w*7+d]||'<i style="visibility:hidden"></i>');
   $('log').innerHTML=`<h2>学習記録</h2><div class="row">
+    <div class="kpi"><b>${fmtTime(t.sec)}</b><span>今日の学習時間</span></div>
     <div class="kpi"><b>${t.n}<small>問</small></b><span>今日の回答</span></div>
     <div class="kpi"><b>${t.n?pct(t.ok,t.n):0}<small>%</small></b><span>今日の正答率</span></div>
-    <div class="kpi"><b>${streak}<small>日</small></b><span>連続学習</span></div>
+    <div class="kpi"><b>${streak}<small>日</small></b><span>連続学習</span></div></div>
+    <div class="row" style="margin-top:12px">
+    <div class="kpi"><b>${fmtTime(weekSec)}</b><span>直近7日の学習時間</span></div>
+    <div class="kpi"><b>${fmtTime(totalSec)}</b><span>累計学習時間</span></div>
     <div class="kpi"><b>${days}<small>日</small></b><span>学習した日</span></div>
     <div class="kpi"><b>${totalN.toLocaleString()}<small>問</small></b><span>累計回答</span></div></div>
     <div class="heat">${rows.join('')}</div><div class="heat-cap"><span>12週間前</span><span>色が濃いほど多く解いた日 ・ 今日</span></div>`;
 }
 $('reset').onclick=()=>{if(confirm('解いた記録（正誤・あとで見る・学習日）をすべて消します。よろしいですか？')){P={};L={};save();renderHome();}};
 // 記録の持ち出し・引き継ぎ
-function pack(){return 'SR3:'+btoa(unescape(encodeURIComponent(JSON.stringify({p:P,l:L,v:1}))));}
+function pack(){return 'SR3:'+btoa(unescape(encodeURIComponent(JSON.stringify({p:P,l:L,s:SET,v:2}))));}
 function unpack(s){s=s.trim();if(!s.startsWith('SR3:'))throw new Error('形式が違います');return JSON.parse(decodeURIComponent(escape(atob(s.slice(4)))));}
 function mergeIn(d){let n=0;for(const [id,r] of Object.entries(d.p||{})){const cur=P[id];if(!cur){P[id]=r;n++;continue;}
     const newer=(r.t||0)>(cur.t||0);const m={c:Math.max(cur.c||0,r.c||0),w:Math.max(cur.w||0,r.w||0),bm:!!(cur.bm||r.bm),t:Math.max(cur.t||0,r.t||0)};
     const src=newer?r:cur;if(src.last!==undefined)m.last=src.last;if(src.s!==undefined)m.s=src.s;if(src.due!==undefined)m.due=src.due;P[id]=m;n++;}
-  for(const [k,v] of Object.entries(d.l||{})){const cur=L[k];L[k]=cur?{n:Math.max(cur.n,v.n),ok:Math.max(cur.ok,v.ok)}:v;}
+  for(const [k,v] of Object.entries(d.l||{})){const cur=L[k];L[k]=cur?{n:Math.max(cur.n,v.n),ok:Math.max(cur.ok,v.ok),sec:Math.max(cur.sec||0,v.sec||0)}:v;}
+  if(d.s&&d.s.time!==undefined&&!SET.time){SET.time=d.s.time;saveSet();}
   save();return n;}
 $('xfer').onclick=()=>{$('xs-text').value='';$('xs-msg').textContent='';$('xsheet').classList.add('on');$('sheet-bg').classList.add('on');};
 $('xs-copy').onclick=async()=>{const s=pack();$('xs-text').value=s;try{await navigator.clipboard.writeText(s);$('xs-msg').textContent='コピーしました。LINEやメモに貼って別の端末へ送ってください。';}catch(e){$('xs-text').select();$('xs-msg').textContent='上の文字列を長押しして全部コピーしてください。';}};
@@ -405,6 +436,7 @@ function openSubject(k){const s=SUBJ.find(x=>x.k===k);const qs=bySubj[k];const s
 const sh={filter:'all',order:'seq',limit:0,star:false};let shQs=[],shTitle='';
 function seg(id,key){document.querySelectorAll('#'+id+' button').forEach(b=>b.onclick=()=>{sh[key]=b.dataset.v;document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));updSheet();});}
 seg('sh-filter','filter');seg('sh-order','order');seg('sh-limit','limit');
+document.querySelectorAll('#sh-time button').forEach(b=>{b.classList.toggle('on',+b.dataset.v===+SET.time);b.onclick=()=>{SET.time=+b.dataset.v;saveSet();document.querySelectorAll('#sh-time button').forEach(x=>x.classList.toggle('on',x===b));};});
 $('sh-star').onclick=()=>{sh.star=!sh.star;$('sh-star').classList.toggle('on',sh.star);$('sh-star').setAttribute('aria-checked',String(sh.star));updSheet();};
 function pool(qs,o){let a=qs.filter(q=>o.star||!q.star);if(a.length===0)a=qs.slice();
   if(o.filter==='new')a=a.filter(q=>!(rec(q)&&rec(q).last!==undefined));
@@ -427,37 +459,46 @@ let run=null;
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function startQuiz(qs,o){let a=pool(qs,o);a=a.slice().sort((x,y)=>x.i-y.i);if(o.order==='rand')shuffle(a);if(o.limit)a=a.slice(0,o.limit);
   if(!a.length){alert('条件に合う問題がありません。');return;}
-  run={qs:a,idx:0,ok:0,ng:0,log:[],title:o.title};$('quiz-title').textContent=o.title;show('quiz');renderQ();}
+  run={qs:a,idx:0,ok:0,ng:0,to:0,sec:0,log:[],title:o.title};$('quiz-title').textContent=o.title;lastAct=Date.now();show('quiz');renderQ();}
+// 1問ごとの制限時間
+let tmr=null,tEnd=0;
+function stopTimer(){if(tmr){clearInterval(tmr);tmr=null;}}
+function startTimer(){stopTimer();const lim=+SET.time;const el=$('timer');if(!lim){el.classList.remove('on');return;}
+  el.classList.add('on');el.classList.remove('warn');tEnd=Date.now()+lim*1000;
+  const tick=()=>{const left=Math.max(0,tEnd-Date.now());$('tbar').style.width=(left/(lim*1000)*100)+'%';$('tnum').textContent=Math.ceil(left/1000);
+    el.classList.toggle('warn',left<=5000);if(left<=0){stopTimer();answer(null);}};
+  tick();tmr=setInterval(tick,100);}
 function renderQ(){const q=run.qs[run.idx];const s=SUBJ.find(x=>x.k===q.subject);
   $('quiz-cnt').textContent=`${run.idx+1} / ${run.qs.length}`;$('qbar').style.width=pct(run.idx,run.qs.length)+'%';
   $('qno').textContent=`第 ${run.idx+1} 問`;
   $('crumb').innerHTML=`<b style="color:var(${s.c})">${esc(q.subject)}</b> › ${esc(q.chapter)} › ${esc(q.section)}`;
   $('topic').textContent=q.topic||'';$('starmark').hidden=!q.star;$('qtext').textContent=q.q;
   $('res').classList.remove('on');$('next').classList.remove('on');$('ans').style.display='';
-  $('next').textContent=run.idx+1<run.qs.length?'次の問題':'結果を見る';window.scrollTo(0,0);}
+  $('next').textContent=run.idx+1<run.qs.length?'次の問題':'結果を見る';window.scrollTo(0,0);startTimer();}
 document.querySelectorAll('#ans button').forEach(b=>b.onclick=()=>answer(b.dataset.a==='1'));
 document.addEventListener('keydown',e=>{if(!$('s-quiz').classList.contains('on'))return;
   if($('ans').style.display!=='none'){if(e.key==='o'||e.key==='ArrowLeft')answer(true);if(e.key==='x'||e.key==='ArrowRight')answer(false);}
   else if(e.key==='Enter'||e.key===' '){e.preventDefault();$('next').click();}});
-function answer(v){const q=run.qs[run.idx];const correct=v===q.a;
+function answer(v){if($('ans').style.display==='none')return;stopTimer();const q=run.qs[run.idx];const timeout=(v===null);const correct=!timeout&&v===q.a;
   const r=P[q.id]||(P[q.id]={c:0,w:0});r.last=correct?1:0;if(correct)r.c++;else r.w++;r.t=Date.now();schedule(r,correct);
   const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.n++;if(correct)lg.ok++;save();
-  if(correct)run.ok++;else run.ng++;run.log.push({q,v,correct});
-  const vd=$('verdict');vd.className='verdict '+(correct?'ok':'ng');
-  vd.innerHTML=`<span class="big">${correct?'正解':'不正解'}</span><span class="ans-is">正しい答え<b>${q.a?'◯':'✕'}</b></span>`;
+  if(correct)run.ok++;else run.ng++;if(timeout)run.to++;run.log.push({q,v,correct,timeout});
+  const vd=$('verdict');vd.className='verdict '+(correct?'ok':timeout?'to':'ng');
+  vd.innerHTML=`<span class="big">${correct?'正解':timeout?'時間切れ':'不正解'}</span><span class="ans-is">正しい答え<b>${q.a?'◯':'✕'}</b></span>`;
   $('exp').textContent=q.exp;$('pg').textContent=`テキスト p.${q.page}`;$('refsec').textContent=`${q.subject} ${q.section}`;
   const bm=$('bm');bm.classList.toggle('on',!!r.bm);bm.querySelector('span').textContent=r.bm?'あとで見る に入れた':'あとで見る';
   $('ans').style.display='none';$('res').classList.add('on');$('next').classList.add('on');
   setTimeout(()=>$('res').scrollIntoView({behavior:'smooth',block:'nearest'}),30);}
 $('bm').onclick=()=>{const q=run.qs[run.idx];const r=P[q.id]||(P[q.id]={c:0,w:0});r.bm=!r.bm;save();$('bm').classList.toggle('on',!!r.bm);$('bm').querySelector('span').textContent=r.bm?'あとで見る に入れた':'あとで見る';};
 $('next').onclick=()=>{run.idx++;if(run.idx<run.qs.length)renderQ();else finish();};
-$('quiz-back').onclick=()=>{if(run.log.length===0){renderHome();show('home');return;}if(confirm('ここまでの結果を見て終了しますか？'))finish();};
-function finish(){const n=run.log.length;$('score').innerHTML=`${run.ok}<small>/ ${n}</small>`;
-  $('score-p').textContent=n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}`:'';$('res-sub').textContent=run.title;
+$('quiz-back').onclick=()=>{if(run.log.length===0){stopTimer();save();renderHome();show('home');return;}if(confirm('ここまでの結果を見て終了しますか？'))finish();else startTimerIfWaiting();};
+function startTimerIfWaiting(){if($('ans').style.display!=='none'&&+SET.time&&!tmr)startTimer();}
+function finish(){stopTimer();save();const n=run.log.length;$('score').innerHTML=`${run.ok}<small>/ ${n}</small>`;
+  $('score-p').textContent=n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}${run.to?`（うち時間切れ ${run.to}問）`:''} ・ ${fmtTimePlain(run.sec)}`:'';$('res-sub').textContent=run.title;
   const wrong=run.log.filter(l=>!l.correct);$('retry-wrong').style.display=wrong.length?'':'none';
   $('rlist').innerHTML=(wrong.length?`<h2>間違えた問題</h2>`+wrong.map(item).join(''):'')+(run.log.length>wrong.length?`<h2>正解した問題</h2>`+run.log.filter(l=>l.correct).map(item).join(''):'');
   show('result');}
-function item(l){const q=l.q;return `<div class="ritem"><span class="m ${l.correct?'ok':'ng'}">${q.a?'◯':'✕'}</span><span><div>${esc(q.q)}</div><div class="e">${esc(q.exp)}</div><div class="pg">${esc(q.subject)} ${esc(q.section)} ・ p.${q.page}</div></span></div>`;}
+function item(l){const q=l.q;return `<div class="ritem"><span class="m ${l.correct?'ok':'ng'}">${q.a?'◯':'✕'}</span><span>${l.timeout?'<div style="font-size:12px;color:var(--warn);font-weight:700">時間切れ</div>':''}<div>${esc(q.q)}</div><div class="e">${esc(q.exp)}</div><div class="pg">${esc(q.subject)} ${esc(q.section)} ・ p.${q.page}</div></span></div>`;}
 $('retry-wrong').onclick=()=>{const w=run.log.filter(l=>!l.correct).map(l=>l.q);startQuiz(w,{filter:'all',order:'seq',limit:0,star:true,title:run.title+'（間違えた問題）'});};
 $('res-back').onclick=$('res-home').onclick=()=>{renderHome();show('home');};
 
