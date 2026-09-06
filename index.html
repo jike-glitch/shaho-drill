@@ -114,6 +114,28 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .timer.warn .tn{color:var(--ng)}
 .verdict.to{background:var(--warn-soft);color:var(--warn)}
 .log .row{row-gap:12px}
+/* 応援ねこ */
+.cat{width:64px;height:64px;flex:none}
+.cat svg{width:100%;height:100%;display:block}
+.cheer{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));z-index:30;display:flex;justify-content:center;pointer-events:none;padding:0 16px}
+.cheer .box{pointer-events:auto;max-width:520px;width:100%;background:var(--surface);border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.1);padding:12px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--line);animation:cheerIn .35s cubic-bezier(.2,.8,.2,1)}
+.cheer .box.big{padding:16px 16px}
+.cheer .box.big .cat{width:84px;height:84px}
+.cheer .msg{flex:1;font-size:15px;line-height:1.6;font-weight:700;color:var(--ink)}
+.cheer .msg small{display:block;font-weight:400;font-size:12px;color:var(--ink3);margin-top:2px}
+.cheer .x{color:var(--ink3);font-size:18px;padding:6px;line-height:1}
+@keyframes cheerIn{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.cheer.out .box{animation:cheerOut .3s forwards}
+@keyframes cheerOut{to{transform:translateY(24px);opacity:0}}
+.greet{display:flex;align-items:center;gap:12px;margin:10px 16px 0;padding:12px 14px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
+.greet .msg{font-size:14px;line-height:1.6;color:var(--ink)}
+.greet .msg b{display:block;font-weight:700}
+.greet .msg span{color:var(--ink2)}
+.rcat{display:flex;align-items:center;gap:14px;text-align:left;margin:0 0 14px;padding:0 0 14px;border-bottom:1px solid var(--line)}
+.rcat .cat{width:80px;height:80px}
+.rcat .msg{font-size:15px;font-weight:700;line-height:1.6}
+.rcat .msg small{display:block;font-weight:400;font-size:12px;color:var(--ink3);margin-top:2px}
+@media (prefers-reduced-motion:reduce){.cheer .box,.cheer.out .box{animation:none}}
 .chap{background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);margin:0 16px 12px;overflow:hidden}
 .chap>button.chh{width:100%;display:flex;align-items:center;gap:10px;padding:14px 16px;text-align:left}
 .chh .n{font-family:var(--disp);font-weight:800;font-size:17px;flex:1;line-height:1.3}
@@ -211,6 +233,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     <p>健康保険法・厚生年金保険法・国民年金法。テキストの内容を◯か✕で答えて、解説とページを確かめる。</p>
   </div>
   <div class="total" id="total"></div>
+  <div class="greet" id="greet"></div>
   <button class="due" id="due"></button>
   <div class="subjects" id="subjects"></div>
   <div class="quick" id="quick"></div>
@@ -263,7 +286,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     <button class="back" id="res-back" aria-label="戻る"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="grow"><div class="ttl">結果</div><p class="sub" id="res-sub"></p></div>
   </div>
-  <div class="score"><div class="big" id="score"></div><p id="score-p"></p></div>
+  <div class="score"><div class="rcat" id="rcat"></div><div class="big" id="score"></div><p id="score-p"></p></div>
   <div class="btns">
     <button class="pri" id="retry-wrong">間違えた問題だけもう一度</button>
     <button class="sec2" id="res-home">ホームへ</button>
@@ -274,6 +297,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 
 </div>
 
+<div class="cheer" id="cheer" hidden></div>
 <div class="sheet-bg" id="sheet-bg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true">
   <h2 id="sh-title"></h2>
@@ -331,10 +355,104 @@ const saveSet=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SET));}catch(e){
 let lastAct=Date.now();['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now();},{passive:true}));
 let secAcc=0;
 setInterval(()=>{if(!$('s-quiz').classList.contains('on'))return;if(document.visibilityState!=='visible')return;if(Date.now()-lastAct>180000)return;
-  const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.sec=(lg.sec||0)+1;if(run)run.sec=(run.sec||0)+1;if(++secAcc>=15){secAcc=0;save();}},1000);
+  const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.sec=(lg.sec||0)+1;if(run)run.sec=(run.sec||0)+1;if(++secAcc>=15){secAcc=0;save();}onStudyTick();},1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')save();});
 const fmtTime=s=>{s=Math.round(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}<small>時間</small>${String(m).padStart(2,'0')}<small>分</small>`:`${m}<small>分</small>`;};
 const fmtTimePlain=s=>{s=Math.round(s||0);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h}時間${String(m).padStart(2,'0')}分`:`${m}分${String(s%60).padStart(2,'0')}秒`;};
+
+// ===== 応援ねこ =====
+// 表情: smile(にっこり) cheer(ばんざい) comfort(なでなで) sleepy(ねむい) surprise(びっくり) proud(どきどき)
+function cat(mood,costume){
+  const fur='#E9A95A',dark='#C8823A',inner='#F7C6BC',line='#4A3324';
+  const head=`<path d="M14 30 L10 10 L26 20 Q36 16 46 20 L62 10 L58 30 Q66 44 58 56 Q50 66 36 66 Q22 66 14 56 Q6 44 14 30 Z" fill="${fur}"/>
+    <path d="M15 14 L25 22 L18 30 Z M57 14 L47 22 L54 30 Z" fill="${inner}"/>
+    <path d="M30 22 q6 -4 12 0 M27 27 q9 -5 18 0" stroke="${dark}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  const nose=`<path d="M33.5 44 L38.5 44 L36 47 Z" fill="${inner}"/>`;
+  const whisk=`<path d="M6 44 L20 45 M6 50 L20 48 M66 44 L52 45 M66 50 L52 48" stroke="${line}" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>`;
+  const blush=`<circle cx="21" cy="47" r="4" fill="${inner}" opacity=".9"/><circle cx="51" cy="47" r="4" fill="${inner}" opacity=".9"/>`;
+  const mouthW=`<path d="M31 48 q2.5 3 5 0 q2.5 3 5 0" stroke="${line}" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+  let face='';
+  if(mood==='smile'){face=`<path d="M22 40 q5 -6 10 0 M40 40 q5 -6 10 0" stroke="${line}" stroke-width="2.6" fill="none" stroke-linecap="round"/>${blush}${nose}${mouthW}`;}
+  else if(mood==='cheer'){face=`<circle cx="27" cy="39" r="3.2" fill="${line}"/><circle cx="45" cy="39" r="3.2" fill="${line}"/><circle cx="28" cy="38" r="1" fill="#fff"/><circle cx="46" cy="38" r="1" fill="#fff"/>${blush}${nose}<path d="M31 48 q5 6 10 0" stroke="${line}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <ellipse cx="9" cy="58" rx="6" ry="7" fill="${fur}" transform="rotate(-25 9 58)"/><ellipse cx="63" cy="58" rx="6" ry="7" fill="${fur}" transform="rotate(25 63 58)"/>
+    <path d="M6 6 l1.5 3 3 1.5 -3 1.5 -1.5 3 -1.5 -3 -3 -1.5 3 -1.5z M64 4 l1.2 2.4 2.4 1.2 -2.4 1.2 -1.2 2.4 -1.2 -2.4 -2.4 -1.2 2.4 -1.2z" fill="#F2C14E"/>`;}
+  else if(mood==='comfort'){face=`<path d="M22 40 q5 -3 10 0 M40 40 q5 -3 10 0" stroke="${line}" stroke-width="2.6" fill="none" stroke-linecap="round"/>${blush}${nose}${mouthW}
+    <path d="M60 8 c-3 -4 -9 0 -6 5 c1.5 2.5 6 5 6 5 s4.5 -2.5 6 -5 c3 -5 -3 -9 -6 -5z" fill="#E8788A"/>`;}
+  else if(mood==='sleepy'){face=`<path d="M22 41 h10 M40 41 h10" stroke="${line}" stroke-width="2.6" stroke-linecap="round"/>${nose}<path d="M33 49 q3 2 6 0" stroke="${line}" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <text x="56" y="14" font-size="10" font-weight="700" fill="${dark}" font-family="sans-serif">z</text><text x="62" y="8" font-size="7" font-weight="700" fill="${dark}" font-family="sans-serif">z</text>`;}
+  else if(mood==='surprise'){face=`<circle cx="27" cy="39" r="4.2" fill="#fff" stroke="${line}" stroke-width="1.5"/><circle cx="45" cy="39" r="4.2" fill="#fff" stroke="${line}" stroke-width="1.5"/><circle cx="27" cy="39" r="2.2" fill="${line}"/><circle cx="45" cy="39" r="2.2" fill="${line}"/>${nose}<ellipse cx="36" cy="50" rx="2.5" ry="3" fill="${line}"/>
+    <text x="60" y="14" font-size="14" font-weight="800" fill="${dark}" font-family="sans-serif">!</text>`;}
+  else {face=`<circle cx="27" cy="39" r="3" fill="${line}"/><circle cx="45" cy="39" r="3" fill="${line}"/><circle cx="28" cy="38" r="1" fill="#fff"/><circle cx="46" cy="38" r="1" fill="#fff"/>${blush}${nose}${mouthW}`;}
+  // コスチューム（ボクシング・ラグビー・アメフト・テニス）
+  let back='',front='';
+  if(costume==='boxing'){face=face.replace(/<ellipse cx="9"[^>]*\/><ellipse cx="63"[^>]*\/>/,'');
+    front=`<g><circle cx="11" cy="57" r="9" fill="#D3372B"/><rect x="5" y="62" width="12" height="5" rx="2" fill="#F6E9C8"/><path d="M6 54 q5 -5 10 0" stroke="#A82418" stroke-width="1.5" fill="none"/></g>
+      <g><circle cx="61" cy="57" r="9" fill="#D3372B"/><rect x="55" y="62" width="12" height="5" rx="2" fill="#F6E9C8"/><path d="M56 54 q5 -5 10 0" stroke="#A82418" stroke-width="1.5" fill="none"/></g>`;}
+  else if(costume==='rugby'){back=`<path d="M12 13 Q36 4 60 13 L58 26 Q36 20 14 26 Z" fill="#2F6B4F"/><path d="M14 20 Q36 14 58 20" stroke="#F2E6C9" stroke-width="3" fill="none"/>`;
+    front=`<g transform="rotate(-35 57 60)"><ellipse cx="57" cy="60" rx="12" ry="7" fill="#8B4A2B"/><path d="M49 60 h16 M53 58 v4 M57 58 v4 M61 58 v4" stroke="#F6E9C8" stroke-width="1.3" stroke-linecap="round"/></g>`;}
+  else if(costume==='football'){back=`<path d="M8 32 Q8 4 36 4 Q64 4 64 32 L64 40 Q60 44 56 40 L56 30 Q56 14 36 14 Q16 14 16 30 L16 40 Q12 44 8 40 Z" fill="#2F4B7C"/><path d="M33 5 h6 v10 h-6z" fill="#F2F4F8"/>`;
+    front=`<path d="M10 50 h52 M12 56 h48" stroke="#C9D2E3" stroke-width="2.6" stroke-linecap="round"/><path d="M8 40 Q8 58 14 58 M64 40 Q64 58 58 58" stroke="#2F4B7C" stroke-width="4" fill="none" stroke-linecap="round"/>`;}
+  else if(costume==='tennis'){back=`<g transform="rotate(30 60 44)"><ellipse cx="60" cy="40" rx="9" ry="12" fill="none" stroke="#3A6EA5" stroke-width="2.5"/><path d="M53 36 h14 M53 40 h14 M53 44 h14 M56 30 v20 M60 28 v24 M64 30 v20" stroke="#9FB3CC" stroke-width=".9"/><rect x="58.5" y="51" width="3" height="15" rx="1.5" fill="#6B4A2B"/></g>`;
+    front=`<path d="M18 30 Q36 24 54 30 L54 35 Q36 29 18 35 Z" fill="#E8788A"/><circle cx="12" cy="60" r="5.5" fill="#C8E04B"/><path d="M8.5 57 q3.5 3 3.5 6.5 M15.5 57 q-3.5 3 -3.5 6.5" stroke="#fff" stroke-width="1" fill="none"/>`;}
+  return `<span class="cat" aria-hidden="true"><svg viewBox="0 0 72 72">${back}${head}${whisk}${face}${front}</svg></span>`;
+}
+const COSTUMES=['boxing','rugby','football','tennis','tennis'];
+const COSTUME_SUB={boxing:'ガードを上げて、次の一問。',rugby:'一歩ずつ前へ。トライまで運ぼう。',football:'タッチダウン級。',tennis:'エース級の一問。'};
+function pickCostume(p){return Math.random()<(p||0.45)?COSTUMES[Math.floor(Math.random()*COSTUMES.length)]:'';}
+const MSG={
+  start:['よし、いこう。今日も一問ずつ積み上げよう。','ここからが本番。ゆっくり、ていねいに。','開いただけで今日の勝ち。あとは楽しもう。','おかえり。続きをやろう。','昨日の自分より一問多く。それでじゅうぶん。','準備OK。まちがえても大丈夫、ここは練習の場。'],
+  streak3:['3問連続！いい調子。','3連続正解。読みが冴えてる。','おお、3つ続けて正解。そのまま。'],
+  streak5:['5問連続正解！すごい。','5連続。この節、つかんできたね。','5つ続けて正解。自信もっていい。','5連続！条文の勘が育ってる。'],
+  streak10:['10問連続正解！！文句なし。','10連続、圧巻。この範囲は仕上がってきた。','10問ぶっ通しで正解。ほんとうにすごい。'],
+  streak20:['20問連続。もう講師レベル。','20連続正解。この単元はあなたのもの。'],
+  every10:['10問おつかれ。ここまでで {ok} 問正解。','20問目まで来た。積み上がってる。','30問！集中力が続いてる。','40問。すごい粘り。','50問！！今日は大収穫。','60問。すばらしい。','70問。ペース落ちてない。','80問。あとひと息。','90問。ここまで来たら100まで。','100問到達！！誇っていい数字。'],
+  wrong2:['2問続けてはずれ。こういう日もある。解説を読めば次は取れる。','大丈夫。まちがえた問題こそ、あとで点になる。','ここは難しいところ。落ち着いて、もう一回。'],
+  wrong3:['3問続いた。いったん深呼吸しよう。','難所に入ってる。解説をゆっくり読もう。ここを越えたら強い。','今つまずいている論点は、本番で出たら取れる論点になる。','あせらなくていい。一問ずつ、確かめながら。'],
+  wrongRecover:['きた！立て直した。','そう、それ。切り替えがうまい。','はずれのあとの正解は、いちばん価値がある。'],
+  timeout:['時間切れ。でも問題文は読めてた。次は決めよう。','惜しい。迷ったところが、まさに論点。解説で確かめよう。','時間切れも記録のうち。復習で必ず回ってくるから大丈夫。'],
+  breakTime:['25分がんばった。5分だけ休もう。水を飲んで、目を休めて。','ここでいったん休憩。伸びをして、遠くを見よう。','集中が続いてる証拠。だからこそ、ひと休み。戻ってきたらまた続きを。'],
+  breakLong:['もう45分。しっかり休んでいい時間。','長く集中できてる。いったん手を止めて、体を動かそう。'],
+  resultHigh:['完璧に近い。この節は仕上がってる。','ほとんど正解。自信を持っていい。','すごい結果。今日のあなたは強い。'],
+  resultGood:['しっかり取れてる。まちがえた分だけ見直せば万全。','良い出来。弱いところが見えたのも収穫。','合格ライン超え。着実に力がついてる。'],
+  resultMid:['半分以上取れた。まちがえた問題は、あとで点になる種。','ここは伸びしろの多い節。もう一回まわせば化ける。','取れた問題と落とした問題がはっきりした。それが今日の成果。'],
+  resultLow:['難しい節だった。でも逃げずに解いた。それが大事。','今日の点は気にしなくていい。解説を読んだ分、確実に前に進んでる。','まちがえた数だけ、覚えることが見えた。次は必ず上がる。'],
+  resultShort:['短い時間でも、やった。それが続く力。','すきま時間の一回が、積み上がる。'],
+  sectionDone:['この節、全問解き切った！','節をひとつ制覇。次の節へ。','一節まるごと踏破。地図が塗られていく。'],
+  chapterDone:['章をひとつ完走！大きな一歩。','この章は全部解いた。すごい積み上げ。'],
+  morning:['おはよう。朝の一問は、いちばん頭に残る。','朝から開いてえらい。今日もいい日になる。'],
+  noon:['お昼の学習、おつかれさま。少しでも進めば十分。','午後もいこう。焦らず、一問ずつ。'],
+  evening:['夕方の一区切り。今日の分、やろう。','一日の終わりが見えてきた。もう少しだけ。'],
+  night:['夜遅くまでおつかれさま。無理はしないで。','この時間まで机に向かえるのは、それだけで強い。','あと少しで今日が終わる。ひと区切りついたら、ゆっくり休んで。'],
+  comeback:['おかえり。久しぶりでも、記録はぜんぶ残ってる。','間があいても大丈夫。今日また開いたことが、いちばん大事。'],
+  streakDays:['{d}日連続で学習中。習慣になってきた。','連続{d}日！この継続力は本番で効く。','{d}日続けてる。すごいことだよ。'],
+  dueDone:['今日の復習、全部終わった！記憶が定着していく。','復習を終えたのは、新しい問題を解くより価値がある。'],
+};
+let lastMsg={};
+function pick(key,vars){const arr=MSG[key];if(!arr)return '';let i=Math.floor(Math.random()*arr.length);if(arr.length>1&&i===lastMsg[key])i=(i+1)%arr.length;lastMsg[key]=i;let s=arr[i];for(const [k,v] of Object.entries(vars||{}))s=s.split('{'+k+'}').join(v);return s;}
+let cheerTimer=null,lastCheerAt=0;
+function cheer(mood,text,sub,opts){opts=opts||{};if(!text)return;const now=Date.now();if(!opts.force&&now-lastCheerAt<12000)return;lastCheerAt=now;
+  const costume=(mood==='cheer'||mood==='smile'||mood==='normal')?pickCostume(mood==='cheer'?0.6:0.35):'';
+  if(costume&&!sub)sub=COSTUME_SUB[costume];
+  const el=$('cheer');if(cheerTimer){clearTimeout(cheerTimer);cheerTimer=null;}el.classList.remove('out');el.hidden=false;
+  el.innerHTML=`<div class="box${opts.big?' big':''}" role="status">${cat(mood,costume)}<div class="msg">${esc(text)}${sub?`<small>${esc(sub)}</small>`:''}</div><button class="x" aria-label="閉じる">×</button></div>`;
+  const hide=()=>{el.classList.add('out');cheerTimer=setTimeout(()=>{el.hidden=true;el.classList.remove('out');},300);};
+  el.querySelector('.x').onclick=hide;el.querySelector('.box').onclick=e=>{if(e.target.tagName!=='BUTTON')hide();};
+  cheerTimer=setTimeout(hide,opts.ms||4200);}
+// 休憩のすすめ（連続学習25分ごと。5分以上離れたらリセット）
+let studyRun=0,lastTickAt=0,breakShown=0;
+function onStudyTick(){const now=Date.now();if(lastTickAt&&now-lastTickAt>300000){studyRun=0;breakShown=0;}lastTickAt=now;studyRun++;
+  if(studyRun>=1500&&breakShown===0){breakShown=1;cheer('sleepy',pick('breakTime'),'休憩したあとに続きをやれば、記憶に残りやすい。',{force:true,big:true,ms:9000});}
+  else if(studyRun>=2700&&breakShown===1){breakShown=2;cheer('sleepy',pick('breakLong'),'',{force:true,big:true,ms:9000});}
+  else if(studyRun>=4500&&breakShown===2){breakShown=3;cheer('comfort','75分。今日はもう十分がんばった。区切ってもいい。','',{force:true,big:true,ms:9000});}}
+function greetText(){const h=new Date().getHours();const key=h<11?'morning':h<16?'noon':h<20?'evening':'night';
+  const today=dkey(Date.now());const daysAgo=(()=>{for(let i=1;i<=60;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&(L[k].n>0||(L[k].sec||0)>=60))return i;}return null;})();
+  let streak=0;for(let i=0;;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&(L[k].n>0||(L[k].sec||0)>=60))streak++;else if(i===0)continue;else break;}
+  const t=L[today]||{n:0,ok:0,sec:0};
+  if(daysAgo&&daysAgo>=3&&t.n===0)return {mood:'comfort',main:pick('comeback'),sub:`前回から${daysAgo}日。続きからいこう。`};
+  if(streak>=3&&t.n===0)return {mood:'cheer',main:pick('streakDays',{d:streak}),sub:pick(key)};
+  if(t.n>=50)return {mood:'cheer',main:`今日はもう${t.n}問。すばらしい一日。`,sub:'あとは無理せず、好きなところまで。'};
+  if(t.n>0)return {mood:'smile',main:`今日は${t.n}問、${fmtTimePlain(t.sec)}。`,sub:pick(key)};
+  return {mood:key==='night'?'sleepy':'normal',main:pick(key),sub:streak>0?`連続学習 ${streak}日目。`:'一問だけでも、開いた今日はえらい。'};}
 const stat=qs=>{let ans=0,ok=0,ng=0,wrongEver=0,bm=0;for(const q of qs){const r=rec(q);if(!r)continue;if(r.bm)bm++;if(r.last===undefined)continue;ans++;if(r.last)ok++;else ng++;if(r.w>0)wrongEver++;}return{n:qs.length,ans,ok,ng,wrongEver,bm};};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -377,6 +495,7 @@ function renderHome(){
     :`<span class="n">0</span><span class="t">今日の復習はありません<small>間違えた問題は翌日、正解した問題は3日→7日→30日後に自動でここに出ます</small></span>`;
   dueEl.disabled=!due.length;
   dueEl.onclick=()=>startQuiz(due.slice(0,50),{filter:'all',order:'seq',limit:0,star:true,title:'今日の復習'});
+  const g=greetText();$('greet').innerHTML=`${cat(g.mood,g.mood==='sleepy'||g.mood==='comfort'?'':pickCostume(0.4))}<div class="msg"><b>${esc(g.main)}</b><span>${esc(g.sub||'')}</span></div>`;
   renderLog();
 }
 function renderLog(){
@@ -459,7 +578,8 @@ let run=null;
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function startQuiz(qs,o){let a=pool(qs,o);a=a.slice().sort((x,y)=>x.i-y.i);if(o.order==='rand')shuffle(a);if(o.limit)a=a.slice(0,o.limit);
   if(!a.length){alert('条件に合う問題がありません。');return;}
-  run={qs:a,idx:0,ok:0,ng:0,to:0,sec:0,log:[],title:o.title};$('quiz-title').textContent=o.title;lastAct=Date.now();show('quiz');renderQ();}
+  run={qs:a,idx:0,ok:0,ng:0,to:0,sec:0,cs:0,ws:0,log:[],title:o.title};$('quiz-title').textContent=o.title;lastAct=Date.now();show('quiz');renderQ();
+  cheer('normal',pick('start'),`${a.length}問。まちがえても記録に残して、あとで回収。`,{force:true,ms:3200});}
 // 1問ごとの制限時間
 let tmr=null,tEnd=0;
 function stopTimer(){if(tmr){clearInterval(tmr);tmr=null;}}
@@ -483,6 +603,21 @@ function answer(v){if($('ans').style.display==='none')return;stopTimer();const q
   const r=P[q.id]||(P[q.id]={c:0,w:0});r.last=correct?1:0;if(correct)r.c++;else r.w++;r.t=Date.now();schedule(r,correct);
   const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.n++;if(correct)lg.ok++;save();
   if(correct)run.ok++;else run.ng++;if(timeout)run.to++;run.log.push({q,v,correct,timeout});
+  // 応援ねこの出番
+  const prevWs=run.ws;if(correct){run.cs++;run.ws=0;}else{run.ws++;run.cs=0;}
+  const n=run.log.length;
+  const secDone=(()=>{const chs=struct[q.subject]||[];for(const ch of chs){const sec=ch.smap[q.section];if(!sec||!sec.qs.includes(q))continue;const st=stat(sec.qs);if(st.ans===sec.qs.length&&sec.qs.length>=5){const cst=stat(ch.qs);return cst.ans===ch.qs.length?'chapter':'section';}}return null;})();
+  const wasComplete=run._doneSecs&&run._doneSecs.has(q.section);run._doneSecs=run._doneSecs||new Set();
+  if(secDone&&!wasComplete){run._doneSecs.add(q.section);cheer('cheer',pick(secDone==='chapter'?'chapterDone':'sectionDone'),`${q.section}`,{force:true,big:true,ms:5000});}
+  else if(timeout)cheer('surprise',pick('timeout'),'',{force:true});
+  else if(correct&&run.cs===20)cheer('cheer',pick('streak20'),'',{force:true,big:true,ms:5000});
+  else if(correct&&run.cs===10)cheer('cheer',pick('streak10'),'',{force:true,big:true,ms:5000});
+  else if(correct&&run.cs===5)cheer('cheer',pick('streak5'),'',{force:true});
+  else if(correct&&run.cs===3)cheer('smile',pick('streak3'),'');
+  else if(correct&&prevWs>=2)cheer('smile',pick('wrongRecover'),'',{force:true});
+  else if(!correct&&run.ws===3)cheer('comfort',pick('wrong3'),'',{force:true,ms:5500});
+  else if(!correct&&run.ws===2)cheer('comfort',pick('wrong2'),'');
+  else if(n%10===0&&n<=100)cheer('smile',pick('every10',{ok:run.ok}).replace(/^(\d+)問/,`${n}問`),`正解 ${run.ok} ／ ${n}`,{force:true});
   const vd=$('verdict');vd.className='verdict '+(correct?'ok':timeout?'to':'ng');
   vd.innerHTML=`<span class="big">${correct?'正解':timeout?'時間切れ':'不正解'}</span><span class="ans-is">正しい答え<b>${q.a?'◯':'✕'}</b></span>`;
   $('exp').textContent=q.exp;$('pg').textContent=`テキスト p.${q.page}`;$('refsec').textContent=`${q.subject} ${q.section}`;
@@ -494,6 +629,10 @@ $('next').onclick=()=>{run.idx++;if(run.idx<run.qs.length)renderQ();else finish(
 $('quiz-back').onclick=()=>{if(run.log.length===0){stopTimer();save();renderHome();show('home');return;}if(confirm('ここまでの結果を見て終了しますか？'))finish();else startTimerIfWaiting();};
 function startTimerIfWaiting(){if($('ans').style.display!=='none'&&+SET.time&&!tmr)startTimer();}
 function finish(){stopTimer();save();const n=run.log.length;$('score').innerHTML=`${run.ok}<small>/ ${n}</small>`;
+  {const p=n?run.ok/n:0;let key,mood;if(n<5){key='resultShort';mood='smile';}else if(p>=0.9){key='resultHigh';mood='cheer';}else if(p>=0.7){key='resultGood';mood='cheer';}else if(p>=0.5){key='resultMid';mood='smile';}else{key='resultLow';mood='comfort';}
+    const costume=mood==='comfort'?'':pickCostume(0.6);const sub=costume?COSTUME_SUB[costume]:(run.ng?`まちがえた${run.ng}問は「今日の復習」に回ります。`:'');
+    $('rcat').innerHTML=`${cat(mood,costume)}<div class="msg">${esc(pick(key))}${sub?`<small>${esc(sub)}</small>`:''}</div>`;
+    const el=$('cheer');if(!el.hidden){el.hidden=true;}}
   $('score-p').textContent=n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}${run.to?`（うち時間切れ ${run.to}問）`:''} ・ ${fmtTimePlain(run.sec)}`:'';$('res-sub').textContent=run.title;
   const wrong=run.log.filter(l=>!l.correct);$('retry-wrong').style.display=wrong.length?'':'none';
   $('rlist').innerHTML=(wrong.length?`<h2>間違えた問題</h2>`+wrong.map(item).join(''):'')+(run.log.length>wrong.length?`<h2>正解した問題</h2>`+run.log.filter(l=>l.correct).map(item).join(''):'');
