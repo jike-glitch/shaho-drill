@@ -397,35 +397,35 @@ function cat(mood,costume){
   return `<span class="cat" aria-hidden="true"><svg viewBox="0 0 72 72">${back}${head}${whisk}${face}${front}</svg></span>`;
 }
 const COSTUMES=['boxing','rugby','football','tennis','tennis'];
-const COSTUME_SUB={boxing:'ガードを上げて、次の一問。',rugby:'一歩ずつ前へ。トライまで運ぼう。',football:'タッチダウン級。',tennis:'エース級の一問。'};
+const COSTUME_SUB={boxing:'ガード上げて、次の一問！🥊',rugby:'一歩ずつ前へ！トライまで運ぼ〜🏉',football:'タッチダウン級！！🏈',tennis:'エース級の一問！🎾✨'};
 function pickCostume(p){return Math.random()<(p||0.45)?COSTUMES[Math.floor(Math.random()*COSTUMES.length)]:'';}
 const MSG={
-  start:['よし、いこう。今日も一問ずつ積み上げよう。','ここからが本番。ゆっくり、ていねいに。','開いただけで今日の勝ち。あとは楽しもう。','おかえり。続きをやろう。','昨日の自分より一問多く。それでじゅうぶん。','準備OK。まちがえても大丈夫、ここは練習の場。'],
-  streak3:['3問連続！いい調子。','3連続正解。読みが冴えてる。','おお、3つ続けて正解。そのまま。'],
-  streak5:['5問連続正解！すごい。','5連続。この節、つかんできたね。','5つ続けて正解。自信もっていい。','5連続！条文の勘が育ってる。'],
-  streak10:['10問連続正解！！文句なし。','10連続、圧巻。この範囲は仕上がってきた。','10問ぶっ通しで正解。ほんとうにすごい。'],
-  streak20:['20問連続。もう講師レベル。','20連続正解。この単元はあなたのもの。'],
-  every10:['10問おつかれ。ここまでで {ok} 問正解。','20問目まで来た。積み上がってる。','30問！集中力が続いてる。','40問。すごい粘り。','50問！！今日は大収穫。','60問。すばらしい。','70問。ペース落ちてない。','80問。あとひと息。','90問。ここまで来たら100まで。','100問到達！！誇っていい数字。'],
-  wrong2:['2問続けてはずれ。こういう日もある。解説を読めば次は取れる。','大丈夫。まちがえた問題こそ、あとで点になる。','ここは難しいところ。落ち着いて、もう一回。'],
-  wrong3:['3問続いた。いったん深呼吸しよう。','難所に入ってる。解説をゆっくり読もう。ここを越えたら強い。','今つまずいている論点は、本番で出たら取れる論点になる。','あせらなくていい。一問ずつ、確かめながら。'],
-  wrongRecover:['きた！立て直した。','そう、それ。切り替えがうまい。','はずれのあとの正解は、いちばん価値がある。'],
-  timeout:['時間切れ。でも問題文は読めてた。次は決めよう。','惜しい。迷ったところが、まさに論点。解説で確かめよう。','時間切れも記録のうち。復習で必ず回ってくるから大丈夫。'],
-  breakTime:['25分がんばった。5分だけ休もう。水を飲んで、目を休めて。','ここでいったん休憩。伸びをして、遠くを見よう。','集中が続いてる証拠。だからこそ、ひと休み。戻ってきたらまた続きを。'],
-  breakLong:['もう45分。しっかり休んでいい時間。','長く集中できてる。いったん手を止めて、体を動かそう。'],
-  resultHigh:['完璧に近い。この節は仕上がってる。','ほとんど正解。自信を持っていい。','すごい結果。今日のあなたは強い。'],
-  resultGood:['しっかり取れてる。まちがえた分だけ見直せば万全。','良い出来。弱いところが見えたのも収穫。','合格ライン超え。着実に力がついてる。'],
-  resultMid:['半分以上取れた。まちがえた問題は、あとで点になる種。','ここは伸びしろの多い節。もう一回まわせば化ける。','取れた問題と落とした問題がはっきりした。それが今日の成果。'],
-  resultLow:['難しい節だった。でも逃げずに解いた。それが大事。','今日の点は気にしなくていい。解説を読んだ分、確実に前に進んでる。','まちがえた数だけ、覚えることが見えた。次は必ず上がる。'],
-  resultShort:['短い時間でも、やった。それが続く力。','すきま時間の一回が、積み上がる。'],
-  sectionDone:['この節、全問解き切った！','節をひとつ制覇。次の節へ。','一節まるごと踏破。地図が塗られていく。'],
-  chapterDone:['章をひとつ完走！大きな一歩。','この章は全部解いた。すごい積み上げ。'],
-  morning:['おはよう。朝の一問は、いちばん頭に残る。','朝から開いてえらい。今日もいい日になる。'],
-  noon:['お昼の学習、おつかれさま。少しでも進めば十分。','午後もいこう。焦らず、一問ずつ。'],
-  evening:['夕方の一区切り。今日の分、やろう。','一日の終わりが見えてきた。もう少しだけ。'],
-  night:['夜遅くまでおつかれさま。無理はしないで。','この時間まで机に向かえるのは、それだけで強い。','あと少しで今日が終わる。ひと区切りついたら、ゆっくり休んで。'],
-  comeback:['おかえり。久しぶりでも、記録はぜんぶ残ってる。','間があいても大丈夫。今日また開いたことが、いちばん大事。'],
-  streakDays:['{d}日連続で学習中。習慣になってきた。','連続{d}日！この継続力は本番で効く。','{d}日続けてる。すごいことだよ。'],
-  dueDone:['今日の復習、全部終わった！記憶が定着していく。','復習を終えたのは、新しい問題を解くより価値がある。'],
+  start:['よっしゃ、いこう！！今日も一問ずつ積み上げよ〜💪✨','ここからが本番！ゆっくりでいいよ、いっしょにがんばろ🐾','開いただけで今日の勝ち🏆 あとは楽しもう！','おかえり〜！続きやろっか😊','昨日の自分より一問多く！それでじゅうぶん👍','準備OK？まちがえても大丈夫、ここは練習の場だよ〜🎵','待ってたよ〜！さあ、解こう！！🔥','今日もえらい！開いた時点で花丸💮'],
+  streak3:['3問連続！！いい調子〜🎶','3連続正解✨ 読みが冴えてる！','おっ、3つ続けて正解！そのまま〜🐾','3連発！ノってきた？😆'],
+  streak5:['5問連続正解！！すごすぎ🎉🎉','5連続！！この節、つかんできたね😆✨','5つ続けて正解！自信もっていいよ〜💪','5連続！条文の勘、育ってる🌱✨','ごれんぞく〜〜！！拍手👏👏👏'],
+  streak10:['10問連続正解！！！文句なし🏆✨','10連続、圧巻！！この範囲は仕上がってきたね🔥','10問ぶっ通しで正解…ほんとにすごい😳✨','じゅう、れんぞく！！！ねこ、感動してる🥹👏'],
+  streak20:['20問連続！！もう講師レベルじゃん😳🏆','20連続正解…！この単元はあなたのもの✨✨','にじゅう、れんぞく！！！伝説作ってる🔥🔥'],
+  every10:['10問おつかれ〜！ここまで {ok} 問正解👍','20問目！積み上がってるよ〜📚✨','30問！！集中力すごい🔥','40問！すごい粘り💪💪','50問！！！今日は大収穫🎉🎉','60問！すばらしい〜👏✨','70問！ペース落ちてない！さすが😆','80問！あとひと息🐾','90問！ここまで来たら100まで行こ〜🔥','100問到達！！！誇っていい数字だよ🏆🎉🎉'],
+  wrong2:['2問続けてはずれ〜！こういう日もある😅 解説読めば次は取れるよ！','大丈夫大丈夫👍 まちがえた問題こそ、あとで点になるんだから✨','ここ難しいところだよね〜🤔 落ち着いて、もう一回！'],
+  wrong3:['3問続いちゃった！いったん深呼吸しよ〜🍵','難所に入ってる！解説ゆっくり読もう。ここ越えたら強いよ💪','今つまずいてる論点は、本番で出たら取れる論点になる✨ ほんとだよ！','あせらなくていいよ〜🐾 一問ずつ、確かめながらいこ！','大丈夫！ねこも最初はぜんぶ間違えた（たぶん）😹'],
+  wrongRecover:['きたーーー！！立て直した🔥','そう、それ！！切り替えうまい😆👍','はずれのあとの正解は、いちばん価値ある✨ ナイス！','おかえり正解！！やっぱりできる🎉'],
+  timeout:['時間切れ〜！でも問題文は読めてたよね？次は決めよ！⏰','惜しい！！迷ったところが、まさに論点🎯 解説でチェック！','時間切れも記録のうち✨ 復習でまた回ってくるから大丈夫👍','あっ、タイムアップ⏰ 次はサクッといこ〜！'],
+  breakTime:['25分がんばった！！5分だけ休もう☕ 水飲んで、目を休めて〜','ここでいったん休憩〜🍵 伸びして、遠くを見よ！','集中が続いてる証拠✨ だからこそ、ひと休み！戻ってきたらまた続きね🐾','25分ぶっ通し！えらすぎ！！休憩もトレーニングのうちだよ😴💤'],
+  breakLong:['もう45分！！しっかり休んでいい時間だよ〜☕✨','長く集中できてる！いったん手を止めて、体動かそ〜🙆‍♀️','45分！！ねこはもう眠い…いっしょに休もう😴'],
+  resultHigh:['完璧に近い！！この節は仕上がってる🏆✨','ほとんど正解！！自信もっていいよ〜😆👏','すごい結果！今日のあなた、強い🔥🔥','ほぼ満点！！ねこ、鼻高い😤✨'],
+  resultGood:['しっかり取れてる！まちがえた分だけ見直せば万全👍✨','いい出来！！弱いところが見えたのも収穫だよ🎯','合格ライン超え〜！！着実に力ついてる💪✨','ナイス！！この調子この調子🎶'],
+  resultMid:['半分以上取れた！まちがえた問題は、あとで点になる種🌱','ここは伸びしろの多い節！もう一回まわせば化けるよ〜✨','取れた問題と落とした問題がはっきりした！それが今日の成果👍','おつかれ〜！次やるともっと上がるやつ😆'],
+  resultLow:['難しい節だった〜！でも逃げずに解いた。それがいちばん大事💪','今日の点は気にしなくていいよ！解説読んだ分、確実に前に進んでる🐾','まちがえた数だけ、覚えることが見えた✨ 次は必ず上がる！！','ここ、みんな苦手なところ😅 やった分だけ差がつくよ〜！'],
+  resultShort:['短い時間でも、やった！それが続く力✨','すきま時間の一回が、積み上がる📚🎶','ちょこっとでもえらい！！花丸💮'],
+  sectionDone:['この節、全問解き切った！！！🎉🎉','節をひとつ制覇✨ 次の節へGO！🚀','一節まるごと踏破！地図が塗られていく〜🗺️✨','ぜんぶ解いた！！すごい！！ねこ踊る💃'],
+  chapterDone:['章をひとつ完走！！！大きな一歩🏆🎉','この章、全部解いた…！すごい積み上げ✨✨','しょう、かんそう！！！お祝いだ〜🎊🎊'],
+  morning:['おはよう☀️ 朝の一問は、いちばん頭に残るよ！','朝から開いてえらい！！今日もいい日になる✨','おはよ〜！朝ねこも起きたよ🐾☀️'],
+  noon:['お昼の学習おつかれ〜🍙 少しでも進めば十分！','午後もいこう！焦らず、一問ずつね😊','こんにちは〜！ちょっとだけでも解いていこ🎶'],
+  evening:['夕方の一区切り！今日の分、やろ〜🌇','一日の終わりが見えてきた！もう少しだけ💪','おつかれ〜！夕方の一問、効くよ✨'],
+  night:['夜遅くまでおつかれさま🌙 無理はしないでね！','この時間まで机に向かえるの、それだけで強い✨','あと少しで今日が終わる！ひと区切りついたら、ゆっくり休んで😴💤','こんばんは〜🌙 今日もがんばったね！'],
+  comeback:['おかえり〜〜！！久しぶりでも、記録はぜんぶ残ってるよ😊','間があいても大丈夫！今日また開いたことが、いちばん大事✨','待ってたよ〜🐾 続きからいこ！'],
+  streakDays:['{d}日連続で学習中！！習慣になってきた🔥','連続{d}日！！この継続力、本番で効くよ✨','{d}日続けてる！！すごいことだよ〜👏👏','{d}日連続！ねこも毎日いっしょ🐾✨'],
+  dueDone:['今日の復習、全部終わった！！記憶が定着していく✨','復習を終えたのは、新しい問題を解くより価値あるよ👍🎉'],
 };
 let lastMsg={};
 function pick(key,vars){const arr=MSG[key];if(!arr)return '';let i=Math.floor(Math.random()*arr.length);if(arr.length>1&&i===lastMsg[key])i=(i+1)%arr.length;lastMsg[key]=i;let s=arr[i];for(const [k,v] of Object.entries(vars||{}))s=s.split('{'+k+'}').join(v);return s;}
@@ -441,18 +441,18 @@ function cheer(mood,text,sub,opts){opts=opts||{};if(!text)return;const now=Date.
 // 休憩のすすめ（連続学習25分ごと。5分以上離れたらリセット）
 let studyRun=0,lastTickAt=0,breakShown=0;
 function onStudyTick(){const now=Date.now();if(lastTickAt&&now-lastTickAt>300000){studyRun=0;breakShown=0;}lastTickAt=now;studyRun++;
-  if(studyRun>=1500&&breakShown===0){breakShown=1;cheer('sleepy',pick('breakTime'),'休憩したあとに続きをやれば、記憶に残りやすい。',{force:true,big:true,ms:9000});}
+  if(studyRun>=1500&&breakShown===0){breakShown=1;cheer('sleepy',pick('breakTime'),'休憩したあとに続きをやると、記憶に残りやすいよ🧠✨',{force:true,big:true,ms:9000});}
   else if(studyRun>=2700&&breakShown===1){breakShown=2;cheer('sleepy',pick('breakLong'),'',{force:true,big:true,ms:9000});}
-  else if(studyRun>=4500&&breakShown===2){breakShown=3;cheer('comfort','75分。今日はもう十分がんばった。区切ってもいい。','',{force:true,big:true,ms:9000});}}
+  else if(studyRun>=4500&&breakShown===2){breakShown=3;cheer('comfort','75分！！今日はもう十分がんばった🥹✨ ここで区切ってもいいよ〜','',{force:true,big:true,ms:9000});}}
 function greetText(){const h=new Date().getHours();const key=h<11?'morning':h<16?'noon':h<20?'evening':'night';
   const today=dkey(Date.now());const daysAgo=(()=>{for(let i=1;i<=60;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&(L[k].n>0||(L[k].sec||0)>=60))return i;}return null;})();
   let streak=0;for(let i=0;;i++){const k=dkey(Date.now()-i*DAY);if(L[k]&&(L[k].n>0||(L[k].sec||0)>=60))streak++;else if(i===0)continue;else break;}
   const t=L[today]||{n:0,ok:0,sec:0};
-  if(daysAgo&&daysAgo>=3&&t.n===0)return {mood:'comfort',main:pick('comeback'),sub:`前回から${daysAgo}日。続きからいこう。`};
+  if(daysAgo&&daysAgo>=3&&t.n===0)return {mood:'comfort',main:pick('comeback'),sub:`前回から${daysAgo}日ぶり！続きからいこ〜🐾`};
   if(streak>=3&&t.n===0)return {mood:'cheer',main:pick('streakDays',{d:streak}),sub:pick(key)};
-  if(t.n>=50)return {mood:'cheer',main:`今日はもう${t.n}問。すばらしい一日。`,sub:'あとは無理せず、好きなところまで。'};
-  if(t.n>0)return {mood:'smile',main:`今日は${t.n}問、${fmtTimePlain(t.sec)}。`,sub:pick(key)};
-  return {mood:key==='night'?'sleepy':'normal',main:pick(key),sub:streak>0?`連続学習 ${streak}日目。`:'一問だけでも、開いた今日はえらい。'};}
+  if(t.n>=50)return {mood:'cheer',main:`今日はもう${t.n}問！！すばらしい一日🎉✨`,sub:'あとは無理せず、好きなところまでね😊'};
+  if(t.n>0)return {mood:'smile',main:`今日は${t.n}問、${fmtTimePlain(t.sec)}！いいね〜👍`,sub:pick(key)};
+  return {mood:key==='night'?'sleepy':'normal',main:pick(key),sub:streak>0?`連続学習 ${streak}日目🔥`:'一問だけでも、開いた今日はえらい💮'};}
 const stat=qs=>{let ans=0,ok=0,ng=0,wrongEver=0,bm=0;for(const q of qs){const r=rec(q);if(!r)continue;if(r.bm)bm++;if(r.last===undefined)continue;ans++;if(r.last)ok++;else ng++;if(r.w>0)wrongEver++;}return{n:qs.length,ans,ok,ng,wrongEver,bm};};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -579,7 +579,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 function startQuiz(qs,o){let a=pool(qs,o);a=a.slice().sort((x,y)=>x.i-y.i);if(o.order==='rand')shuffle(a);if(o.limit)a=a.slice(0,o.limit);
   if(!a.length){alert('条件に合う問題がありません。');return;}
   run={qs:a,idx:0,ok:0,ng:0,to:0,sec:0,cs:0,ws:0,log:[],title:o.title};$('quiz-title').textContent=o.title;lastAct=Date.now();show('quiz');renderQ();
-  cheer('normal',pick('start'),`${a.length}問。まちがえても記録に残して、あとで回収。`,{force:true,ms:3200});}
+  cheer('normal',pick('start'),`${a.length}問！まちがえても記録に残して、あとで回収しよ〜🐾`,{force:true,ms:3200});}
 // 1問ごとの制限時間
 let tmr=null,tEnd=0;
 function stopTimer(){if(tmr){clearInterval(tmr);tmr=null;}}
@@ -617,7 +617,7 @@ function answer(v){if($('ans').style.display==='none')return;stopTimer();const q
   else if(correct&&prevWs>=2)cheer('smile',pick('wrongRecover'),'',{force:true});
   else if(!correct&&run.ws===3)cheer('comfort',pick('wrong3'),'',{force:true,ms:5500});
   else if(!correct&&run.ws===2)cheer('comfort',pick('wrong2'),'');
-  else if(n%10===0&&n<=100)cheer('smile',pick('every10',{ok:run.ok}).replace(/^(\d+)問/,`${n}問`),`正解 ${run.ok} ／ ${n}`,{force:true});
+  else if(n%10===0&&n<=100)cheer('smile',MSG.every10[Math.min(n/10-1,9)].split('{ok}').join(run.ok),`正解 ${run.ok} ／ ${n} 👍`,{force:true});
   const vd=$('verdict');vd.className='verdict '+(correct?'ok':timeout?'to':'ng');
   vd.innerHTML=`<span class="big">${correct?'正解':timeout?'時間切れ':'不正解'}</span><span class="ans-is">正しい答え<b>${q.a?'◯':'✕'}</b></span>`;
   $('exp').textContent=q.exp;$('pg').textContent=`テキスト p.${q.page}`;$('refsec').textContent=`${q.subject} ${q.section}`;
@@ -630,7 +630,7 @@ $('quiz-back').onclick=()=>{if(run.log.length===0){stopTimer();save();renderHome
 function startTimerIfWaiting(){if($('ans').style.display!=='none'&&+SET.time&&!tmr)startTimer();}
 function finish(){stopTimer();save();const n=run.log.length;$('score').innerHTML=`${run.ok}<small>/ ${n}</small>`;
   {const p=n?run.ok/n:0;let key,mood;if(n<5){key='resultShort';mood='smile';}else if(p>=0.9){key='resultHigh';mood='cheer';}else if(p>=0.7){key='resultGood';mood='cheer';}else if(p>=0.5){key='resultMid';mood='smile';}else{key='resultLow';mood='comfort';}
-    const costume=mood==='comfort'?'':pickCostume(0.6);const sub=costume?COSTUME_SUB[costume]:(run.ng?`まちがえた${run.ng}問は「今日の復習」に回ります。`:'');
+    const costume=mood==='comfort'?'':pickCostume(0.6);const sub=costume?COSTUME_SUB[costume]:(run.ng?`まちがえた${run.ng}問は「今日の復習」に回るよ🔁`:'おつかれさま〜！🐾');
     $('rcat').innerHTML=`${cat(mood,costume)}<div class="msg">${esc(pick(key))}${sub?`<small>${esc(sub)}</small>`:''}</div>`;
     const el=$('cheer');if(!el.hidden){el.hidden=true;}}
   $('score-p').textContent=n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}${run.to?`（うち時間切れ ${run.to}問）`:''} ・ ${fmtTimePlain(run.sec)}`:'';$('res-sub').textContent=run.title;
