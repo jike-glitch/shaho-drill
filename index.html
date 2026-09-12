@@ -99,6 +99,14 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .due .t small{display:block;font-weight:400;font-size:12px;opacity:.85;margin-top:2px}
 .due.none{background:var(--surface);color:var(--ink2)}
 .due.none .n{color:var(--ink3)}
+.nlhome{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin:0 16px 14px;padding:12px 16px;display:flex;align-items:center;gap:12px;width:calc(100% - 32px);text-align:left}
+.nlhome .n{font-family:var(--disp);font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;min-width:52px;color:var(--ink2)}
+.nlhome .t{font-weight:700;font-size:14px;color:var(--ink)}
+.nlhome .t small{display:block;font-weight:400;font-size:12px;color:var(--ink3);margin-top:2px}
+.nlitem{grid-template-columns:1fr auto;align-items:start}
+.nlitem .undo{align-self:center;background:var(--accent-soft);color:var(--accent);border-radius:var(--rs);padding:8px 12px;font-size:13px;font-weight:700;white-space:nowrap;text-align:center}
+.nlitem .undo small{display:block;font-weight:400;font-size:11px;opacity:.85}
+.nlnote{margin:0 16px 4px;color:var(--ink2);font-size:13px;line-height:1.9}
 .xs textarea{width:100%;min-height:96px;border:1px solid var(--line);border-radius:var(--rs);padding:10px;font-size:12px;font-family:ui-monospace,Consolas,monospace;background:var(--bg);color:var(--ink);resize:vertical;word-break:break-all}
 .xs .row2{display:flex;gap:8px;margin-top:8px}
 .xs .row2 button{flex:1;padding:12px;border-radius:var(--rs);font-weight:700;font-size:14px;border:1px solid var(--line);background:var(--surface)}
@@ -189,6 +197,9 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
 .ans .mark{font-family:var(--disp);font-size:44px;line-height:1;font-weight:800}
 .ans .lbl{font-size:13px;color:var(--ink2)}
 .ans .o .mark{color:var(--ok)} .ans .x .mark{color:var(--ng)}
+.ans .nl{grid-column:1/-1;padding:13px 0 12px;background:var(--surface2);box-shadow:none;border:1px dashed var(--line);color:var(--ink2);gap:1px}
+.ans .nl b{font-size:14px;font-weight:700}
+.ans .nl small{font-weight:400;font-size:12px;color:var(--ink3)}
 .res{display:none;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .res.on{display:block}
 .verdict{display:flex;align-items:center;gap:12px;padding:14px 18px}
@@ -237,6 +248,7 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
   <button class="due" id="due"></button>
   <div class="subjects" id="subjects"></div>
   <div class="quick" id="quick"></div>
+  <button class="nlhome" id="nl-open"></button>
   <div class="log" id="log"></div>
   <p class="foot">解いた記録はこの端末（ブラウザ）に保存されます。ページ番号は各テキストの印刷ページです。<br>
   <button id="xfer">記録の持ち出し・引き継ぎ</button><button id="reset">記録をすべて消す</button></p>
@@ -276,9 +288,24 @@ button:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid 
     <div class="ans" id="ans">
       <button class="o" data-a="1"><span class="mark">◯</span><span class="lbl">正しい</span></button>
       <button class="x" data-a="0"><span class="mark">✕</span><span class="lbl">誤り</span></button>
+      <button class="nl" data-a="nl"><b>まだ習っていないかも</b><small>この問題は出題しなくなります</small></button>
     </div>
     <button class="next" id="next">次の問題</button>
   </div>
+</section>
+
+<section class="screen" id="s-nl">
+  <div class="hdr">
+    <button class="back" data-go="home" aria-label="戻る"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="grow"><div class="ttl">まだ習っていない問題</div><p class="sub" id="nl-sub"></p></div>
+  </div>
+  <p class="nlnote">ここに入れた問題は出題されません。テキストで習ったら「習った」を押すと、また出題されるようになります。<br>「この中から出題する」で解いて◯✕を答えた問題は、自動で出題にもどります。</p>
+  <div class="btns">
+    <button class="pri" id="nl-start">この中から出題する</button>
+    <button class="sec2" id="nl-clear">すべて出題にもどす</button>
+  </div>
+  <div class="rlist" id="nl-list"></div>
+  <div style="height:24px"></div>
 </section>
 
 <section class="screen" id="s-result">
@@ -341,6 +368,7 @@ try{P=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){P={};}
 try{L=JSON.parse(localStorage.getItem(LKEY)||'{}')||{};}catch(e){L={};}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(P));localStorage.setItem(LKEY,JSON.stringify(L));}catch(e){}};
 const rec=q=>P[q.id]||null;
+const isNL=q=>{const r=rec(q);return !!(r&&r.nl);};
 const DAY=86400000;
 const dkey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 // 忘却曲線: 連続正解数 s に応じて次の出題日を決める（日数）
@@ -426,6 +454,7 @@ const MSG={
   comeback:["おかえり〜😊 記録は残ってるよ","久しぶり！続きからいこう🐾","間があいても大丈夫✨"],
   streakDays:["{d}日連続！","連続{d}日🔥 いいペース","{d}日続いてる👍","{d}日連続🐾"],
   dueDone:["今日の復習、全部終わった！✨","復習おつかれ👍"],
+  notyet:["「まだ習っていない」に入れたよ🐾","ここはあとでね😊 出題からはずすね","習ってからでOK📚 ホームの一覧からもどせるよ","先に進もう🎶 習ったら戻せるよ"],
 };
 let lastMsg={};
 function pick(key,vars){const arr=MSG[key];if(!arr)return '';let i=Math.floor(Math.random()*arr.length);if(arr.length>1&&i===lastMsg[key])i=(i+1)%arr.length;lastMsg[key]=i;let s=arr[i];for(const [k,v] of Object.entries(vars||{}))s=s.split('{'+k+'}').join(v);return s;}
@@ -453,7 +482,7 @@ function greetText(){const h=new Date().getHours();const key=h<11?'morning':h<16
   if(t.n>=50)return {mood:'cheer',main:`今日はもう${t.n}問！よく進んだね🎉`,sub:'あとは無理せず、好きなところまで😊'};
   if(t.n>0)return {mood:'smile',main:`今日は${t.n}問、${fmtTimePlain(t.sec)}👍`,sub:pick(key)};
   return {mood:key==='night'?'sleepy':'normal',main:pick(key),sub:streak>0?`連続学習 ${streak}日目🔥`:'一問だけでも、開いたらOK👍'};}
-const stat=qs=>{let ans=0,ok=0,ng=0,wrongEver=0,bm=0;for(const q of qs){const r=rec(q);if(!r)continue;if(r.bm)bm++;if(r.last===undefined)continue;ans++;if(r.last)ok++;else ng++;if(r.w>0)wrongEver++;}return{n:qs.length,ans,ok,ng,wrongEver,bm};};
+const stat=qs=>{let ans=0,ok=0,ng=0,wrongEver=0,bm=0,nl=0;for(const q of qs){const r=rec(q);if(!r)continue;if(r.bm)bm++;if(r.nl)nl++;if(r.last===undefined)continue;ans++;if(r.last)ok++;else ng++;if(r.w>0)wrongEver++;}return{n:qs.length,ans,ok,ng,wrongEver,bm,nl};};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pct=(a,b)=>b?Math.round(a/b*100):0;
@@ -469,9 +498,9 @@ function renderHome(){
       <span class="pct">${pct(st.ans,st.n)}%<small>進み具合</small></span>
       <span class="prog"><i class="ok" style="width:${pct(st.ok,st.n)}%"></i><i class="ng" style="width:${pct(st.ng,st.n)}%"></i></span></button>`;}).join('');
   document.querySelectorAll('.subj').forEach(b=>b.onclick=()=>openSubject(b.dataset.subj));
-  const wrong=Q.filter(q=>{const r=rec(q);return r&&r.w>0&&!r.last;});
-  const bms=Q.filter(q=>{const r=rec(q);return r&&r.bm;});
-  const unans=Q.filter(q=>!(rec(q)&&rec(q).last!==undefined));
+  const wrong=Q.filter(q=>{const r=rec(q);return r&&r.w>0&&!r.last&&!r.nl;});
+  const bms=Q.filter(q=>{const r=rec(q);return r&&r.bm&&!r.nl;});
+  const unans=Q.filter(q=>!isNL(q)&&!(rec(q)&&rec(q).last!==undefined));
   const ico={rand:'<svg viewBox="0 0 24 24"><path d="M4 7h4l8 10h4M4 17h4l2-2.5M14 7h6M18 4l3 3-3 3M18 14l3 3-3 3"/></svg>',
     wrong:'<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5"/></svg>',
     bm:'<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
@@ -489,13 +518,16 @@ function renderHome(){
     if(k==='new')startQuiz(unans,{filter:'all',order:'rand',limit:20,star:false,title:'未回答から20問'});
   });
   // 今日の復習（忘却曲線）
-  const due=Q.filter(isDue).sort((a,b)=>(rec(b).w-rec(a).w)||((rec(a).due||0)-(rec(b).due||0)));
+  const due=Q.filter(q=>isDue(q)&&!isNL(q)).sort((a,b)=>(rec(b).w-rec(a).w)||((rec(a).due||0)-(rec(b).due||0)));
   const dueEl=$('due');dueEl.className='due'+(due.length?'':' none');
   dueEl.innerHTML=due.length?`<span class="n">${due.length}</span><span class="t">今日の復習をはじめる<small>間違えた問題や、しばらく解いていない問題が復習の時期です${due.length>50?'（まず50問ずつ）':''}</small></span>`
     :`<span class="n">0</span><span class="t">今日の復習はありません<small>間違えた問題は翌日、正解した問題は3日→7日→30日後に自動でここに出ます</small></span>`;
   dueEl.disabled=!due.length;
   dueEl.onclick=()=>startQuiz(due.slice(0,50),{filter:'all',order:'seq',limit:0,star:true,title:'今日の復習'});
   const g=greetText();$('greet').innerHTML=`${cat(g.mood,g.mood==='sleepy'||g.mood==='comfort'?'':pickCostume(0.4))}<div class="msg"><b>${esc(g.main)}</b><span>${esc(g.sub||'')}</span></div>`;
+  const nls=nlList();const nb=$('nl-open');
+  nb.innerHTML=`<span class="n">${nls.length}</span><span class="t">まだ習っていない問題<small>${nls.length?'出題からはずしています。習ったら一覧からもどせます':'「まだ習っていないかも」を押した問題が、ここにたまります'}</small></span>`;
+  nb.onclick=()=>{renderNL();show('nl');};
   renderLog();
 }
 function renderLog(){
@@ -522,13 +554,27 @@ function renderLog(){
     <div class="kpi"><b>${totalN.toLocaleString()}<small>問</small></b><span>累計回答</span></div></div>
     <div class="heat">${rows.join('')}</div><div class="heat-cap"><span>12週間前</span><span>色が濃いほど多く解いた日 ・ 今日</span></div>`;
 }
-$('reset').onclick=()=>{if(confirm('解いた記録（正誤・あとで見る・学習日）をすべて消します。よろしいですか？')){P={};L={};save();renderHome();}};
+function nlList(){return Q.filter(isNL).slice().sort((a,b)=>a.i-b.i);}
+function renderNL(){
+  const list=nlList();
+  $('nl-sub').textContent=list.length?`${list.length}問 ・ この問題は出題されません`:'まだ1問もありません';
+  $('nl-start').disabled=!list.length;$('nl-clear').disabled=!list.length;
+  const order=[],gmap={};
+  for(const q of list){const k=`${q.subject} ／ ${q.chapter} ／ ${q.section}`;if(!gmap[k]){gmap[k]=[];order.push(k);}gmap[k].push(q);}
+  $('nl-list').innerHTML=list.length?order.map(k=>`<h2>${esc(k)}</h2>`+gmap[k].map(q=>
+    `<div class="ritem nlitem"><span><div>${esc(q.q)}</div><div class="e">答え ${q.a?'◯':'✕'} ・ ${esc(q.exp)}</div><div class="pg">${esc(q.subject)} ・ p.${q.page}</div></span><button class="undo" data-id="${esc(q.id)}">習った<small>出題にもどす</small></button></div>`).join('')).join('')
+    :'<p class="nlempty nlnote">まだありません。問題を解いているときに「まだ習っていないかも」を押すと、ここにたまります。</p>';
+  document.querySelectorAll('#nl-list .undo').forEach(b=>b.onclick=()=>{const r=P[b.dataset.id];if(r){r.nl=0;r.t=Date.now();save();}renderNL();});
+}
+$('nl-start').onclick=()=>{const list=nlList();if(!list.length)return;startQuiz(list,{filter:'nl',order:'seq',limit:0,star:true,title:'まだ習っていない問題'});};
+$('nl-clear').onclick=()=>{const list=nlList();if(!list.length)return;if(!confirm(`${list.length}問を出題にもどします。よろしいですか？`))return;for(const q of list){const r=P[q.id];if(r){r.nl=0;r.t=Date.now();}}save();renderNL();};
+$('reset').onclick=()=>{if(confirm('解いた記録（正誤・あとで見る・まだ習っていない・学習日）をすべて消します。よろしいですか？')){P={};L={};save();renderHome();}};
 // 記録の持ち出し・引き継ぎ
 function pack(){return 'SR3:'+btoa(unescape(encodeURIComponent(JSON.stringify({p:P,l:L,s:SET,v:2}))));}
 function unpack(s){s=s.trim();if(!s.startsWith('SR3:'))throw new Error('形式が違います');return JSON.parse(decodeURIComponent(escape(atob(s.slice(4)))));}
 function mergeIn(d){let n=0;for(const [id,r] of Object.entries(d.p||{})){const cur=P[id];if(!cur){P[id]=r;n++;continue;}
     const newer=(r.t||0)>(cur.t||0);const m={c:Math.max(cur.c||0,r.c||0),w:Math.max(cur.w||0,r.w||0),bm:!!(cur.bm||r.bm),t:Math.max(cur.t||0,r.t||0)};
-    const src=newer?r:cur;if(src.last!==undefined)m.last=src.last;if(src.s!==undefined)m.s=src.s;if(src.due!==undefined)m.due=src.due;P[id]=m;n++;}
+    const src=newer?r:cur;if(src.nl!==undefined)m.nl=src.nl;if(src.last!==undefined)m.last=src.last;if(src.s!==undefined)m.s=src.s;if(src.due!==undefined)m.due=src.due;P[id]=m;n++;}
   for(const [k,v] of Object.entries(d.l||{})){const cur=L[k];L[k]=cur?{n:Math.max(cur.n,v.n),ok:Math.max(cur.ok,v.ok),sec:Math.max(cur.sec||0,v.sec||0)}:v;}
   if(d.s&&d.s.time!==undefined&&!SET.time){SET.time=d.s.time;saveSet();}
   save();return n;}
@@ -558,11 +604,12 @@ seg('sh-filter','filter');seg('sh-order','order');seg('sh-limit','limit');
 document.querySelectorAll('#sh-time button').forEach(b=>{b.classList.toggle('on',+b.dataset.v===+SET.time);b.onclick=()=>{SET.time=+b.dataset.v;saveSet();document.querySelectorAll('#sh-time button').forEach(x=>x.classList.toggle('on',x===b));};});
 $('sh-star').onclick=()=>{sh.star=!sh.star;$('sh-star').classList.toggle('on',sh.star);$('sh-star').setAttribute('aria-checked',String(sh.star));updSheet();};
 function pool(qs,o){let a=qs.filter(q=>o.star||!q.star);if(a.length===0)a=qs.slice();
+  a=(o.filter==='nl')?a.filter(isNL):a.filter(q=>!isNL(q));
   if(o.filter==='new')a=a.filter(q=>!(rec(q)&&rec(q).last!==undefined));
   if(o.filter==='wrong')a=a.filter(q=>rec(q)&&rec(q).w>0);
   if(o.filter==='bm')a=a.filter(q=>rec(q)&&rec(q).bm);return a;}
 function updSheet(){const n=pool(shQs,sh).length;const st=stat(shQs);const stars=shQs.filter(q=>q.star).length;
-  $('sh-scope').textContent=`${shQs.length}問（うち☆・参考 ${stars}問）・ 回答済み ${st.ans}問`;
+  $('sh-scope').textContent=`${shQs.length}問（うち☆・参考 ${stars}問）・ 回答済み ${st.ans}問`+(st.nl?` ・ まだ習っていない ${st.nl}問は出題しません`:'');
   document.querySelector('#sh-filter [data-v="new"]').disabled=pool(shQs,{...sh,filter:'new'}).length===0;
   document.querySelector('#sh-filter [data-v="wrong"]').disabled=pool(shQs,{...sh,filter:'wrong'}).length===0;
   document.querySelector('#sh-filter [data-v="bm"]').disabled=pool(shQs,{...sh,filter:'bm'}).length===0;
@@ -595,12 +642,12 @@ function renderQ(){const q=run.qs[run.idx];const s=SUBJ.find(x=>x.k===q.subject)
   $('topic').textContent=q.topic||'';$('starmark').hidden=!q.star;$('qtext').textContent=q.q;
   $('res').classList.remove('on');$('next').classList.remove('on');$('ans').style.display='';
   $('next').textContent=run.idx+1<run.qs.length?'次の問題':'結果を見る';window.scrollTo(0,0);startTimer();}
-document.querySelectorAll('#ans button').forEach(b=>b.onclick=()=>answer(b.dataset.a==='1'));
+document.querySelectorAll('#ans button').forEach(b=>b.onclick=()=>{if(b.dataset.a==='nl')markNotYet();else answer(b.dataset.a==='1');});
 document.addEventListener('keydown',e=>{if(!$('s-quiz').classList.contains('on'))return;
   if($('ans').style.display!=='none'){if(e.key==='o'||e.key==='ArrowLeft')answer(true);if(e.key==='x'||e.key==='ArrowRight')answer(false);}
   else if(e.key==='Enter'||e.key===' '){e.preventDefault();$('next').click();}});
 function answer(v){if($('ans').style.display==='none')return;stopTimer();const q=run.qs[run.idx];const timeout=(v===null);const correct=!timeout&&v===q.a;
-  const r=P[q.id]||(P[q.id]={c:0,w:0});r.last=correct?1:0;if(correct)r.c++;else r.w++;r.t=Date.now();schedule(r,correct);
+  const r=P[q.id]||(P[q.id]={c:0,w:0});if(r.nl)r.nl=0;r.last=correct?1:0;if(correct)r.c++;else r.w++;r.t=Date.now();schedule(r,correct);
   const dk=dkey(Date.now());const lg=L[dk]||(L[dk]={n:0,ok:0});lg.n++;if(correct)lg.ok++;save();
   if(correct)run.ok++;else run.ng++;if(timeout)run.to++;run.log.push({q,v,correct,timeout});
   // 応援ねこの出番
@@ -625,15 +672,21 @@ function answer(v){if($('ans').style.display==='none')return;stopTimer();const q
   $('ans').style.display='none';$('res').classList.add('on');$('next').classList.add('on');
   setTimeout(()=>$('res').scrollIntoView({behavior:'smooth',block:'nearest'}),30);}
 $('bm').onclick=()=>{const q=run.qs[run.idx];const r=P[q.id]||(P[q.id]={c:0,w:0});r.bm=!r.bm;save();$('bm').classList.toggle('on',!!r.bm);$('bm').querySelector('span').textContent=r.bm?'あとで見る に入れた':'あとで見る';};
+// 「まだ習っていないかも」= 正誤をつけずに出題からはずす
+function markNotYet(){if($('ans').style.display==='none')return;stopTimer();
+  const q=run.qs[run.idx];const r=P[q.id]||(P[q.id]={c:0,w:0});r.nl=1;r.t=Date.now();save();
+  run.skip=(run.skip||0)+1;run.cs=0;run.ws=0;
+  cheer('smile',pick('notyet'),q.section,{force:true,ms:2600});
+  run.idx++;if(run.idx<run.qs.length)renderQ();else finish();}
 $('next').onclick=()=>{run.idx++;if(run.idx<run.qs.length)renderQ();else finish();};
-$('quiz-back').onclick=()=>{if(run.log.length===0){stopTimer();save();renderHome();show('home');return;}if(confirm('ここまでの結果を見て終了しますか？'))finish();else startTimerIfWaiting();};
+$('quiz-back').onclick=()=>{if(run.log.length===0&&!run.skip){stopTimer();save();renderHome();show('home');return;}if(confirm('ここまでの結果を見て終了しますか？'))finish();else startTimerIfWaiting();};
 function startTimerIfWaiting(){if($('ans').style.display!=='none'&&+SET.time&&!tmr)startTimer();}
 function finish(){stopTimer();save();const n=run.log.length;$('score').innerHTML=`${run.ok}<small>/ ${n}</small>`;
   {const p=n?run.ok/n:0;let key,mood;if(n<5){key='resultShort';mood='smile';}else if(p>=0.9){key='resultHigh';mood='cheer';}else if(p>=0.7){key='resultGood';mood='cheer';}else if(p>=0.5){key='resultMid';mood='smile';}else{key='resultLow';mood='comfort';}
     const costume=mood==='comfort'?'':pickCostume(0.6);const sub=costume?COSTUME_SUB[costume]:(run.ng?`まちがえた${run.ng}問は「今日の復習」に回るよ🔁`:'おつかれさま🐾');
     $('rcat').innerHTML=`${cat(mood,costume)}<div class="msg">${esc(pick(key))}${sub?`<small>${esc(sub)}</small>`:''}</div>`;
     const el=$('cheer');if(!el.hidden){el.hidden=true;}}
-  $('score-p').textContent=n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}${run.to?`（うち時間切れ ${run.to}問）`:''} ・ ${fmtTimePlain(run.sec)}`:'';$('res-sub').textContent=run.title;
+  $('score-p').textContent=(n?`正答率 ${pct(run.ok,n)}%${run.ng?` ・ ${run.ng}問を間違えました`:' ・ 全問正解です'}${run.to?`（うち時間切れ ${run.to}問）`:''} ・ ${fmtTimePlain(run.sec)}`:'この回は◯✕で答えた問題はありません')+(run.skip?` ・ まだ習っていない ${run.skip}問`:'');$('res-sub').textContent=run.title;
   const wrong=run.log.filter(l=>!l.correct);$('retry-wrong').style.display=wrong.length?'':'none';
   $('rlist').innerHTML=(wrong.length?`<h2>間違えた問題</h2>`+wrong.map(item).join(''):'')+(run.log.length>wrong.length?`<h2>正解した問題</h2>`+run.log.filter(l=>l.correct).map(item).join(''):'');
   show('result');}
